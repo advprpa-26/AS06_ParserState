@@ -107,12 +107,12 @@ instance Monad ImpCmd where
 -- Returns the current state
 -- TODO: Implement the `getState` function.
 getState :: ImpCmd State
-getState = todo
+getState = ImpCmd $ \st -> Right (st, st)
 
 -- Overwrites the state with the given argument
 -- TODO: Implement the `setState` function.
 setState :: State -> ImpCmd ()
-setState st = todo
+setState st = ImpCmd $ \_ -> Right (st, ())
 
 -- Helper to update the current state
 modifyState :: (State -> State) -> ImpCmd ()
@@ -123,7 +123,7 @@ modifyState f = do
 -- Sets the assignment in the state
 -- TODO: Implement the `assignVariable` function.
 assignVariable :: Name -> Integer -> ImpCmd ()
-assignVariable n v = todo
+assignVariable n v = modifyState (M.insert n v)
 
 -- Lifts an ImpExpr into an ImpCmd
 liftReader :: ImpExpr a -> ImpCmd a
@@ -132,8 +132,12 @@ liftReader expr = ImpCmd (\st -> fmap (st,) (runExpr expr st))
 -- TODO: Complete the implementation of the `exec` function.
 exec :: Cmd -> ImpCmd ()
 exec CSkip = pure ()
-exec (CAssign n v) = todo
-exec (CIfThEl b t e) = todo
+exec (CAssign n v) = do
+  value <- liftReader $ eval v
+  assignVariable n value 
+exec (CIfThEl b t e) = do
+  cond <- liftReader $ eval b
+  exec (if cond then t else e)
 exec (CWhile b c) = do
   cond <- liftReader $ eval b
   if cond

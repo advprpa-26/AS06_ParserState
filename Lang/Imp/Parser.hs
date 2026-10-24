@@ -54,7 +54,13 @@ cIfThElP = do
 
 -- cWhile = "while" boolExpr "do" cseq "endwhile"
 cWhileP :: Parser Cmd
-cWhileP = todo
+cWhileP = do
+  symbol "while"
+  bExpr <- boolExprP
+  symbol "do"
+  body <- cSeqP
+  symbol "endwhile"
+  pure (CWhile bExpr body)
 
 -- arithExpr = const | var | arithBinOp
 arithExprP :: Parser (Expr Integer)
@@ -143,17 +149,25 @@ relBExprP = do
   symbol ")"
   case op of
     REqOp -> pure $ REq l r
-    RLtOp -> pure $ RLt l r
-    RLtEqOp -> pure $ BOr (RLt l r) (REq l r)
-
+  RLtOp -> pure $ RLt l r
+  RLtEqOp -> pure $ BOr (RLt l r) (REq l r)
+  RGtOp -> pure $ RLt r l
+  RGtEqOp -> pure $ BOr (RLt r l) (REq r l)
 -- a <= b is syntactic sugar and expressed as: a < b || a == b
 
-data ROp = REqOp | RLtOp | RLtEqOp
+data ROp
+  = REqOp
+  | RLtOp
+  | RLtEqOp
+  | RGtOp
+  | RGtEqOp
 
 -- arithExpr = "<=" | "<" | "="
 relOpP :: Parser ROp
 relOpP =
-  symbol "<=" *> pure RLtEqOp -- order is relevant here
+  symbol ">=" *> pure RGtEqOp -- order is relevant here
+    <|> symbol ">" *> pure RGtOp
+    <|> symbol "<=" *> pure RLtEqOp
     <|> symbol "<" *> pure RLtOp
     <|> symbol "=" *> pure REqOp
 
