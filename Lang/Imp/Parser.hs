@@ -54,7 +54,15 @@ cIfThElP = do
 
 -- cWhile = "while" boolExpr "do" cseq "endwhile"
 cWhileP :: Parser Cmd
-cWhileP = todo
+cWhileP = do
+  symbol "while"
+  bExpr <- boolExprP
+  symbol "do"
+  doCmd <- cSeqP
+  symbol "endwhile"
+  pure (CWhile bExpr doCmd)
+
+
 
 -- arithExpr = const | var | arithBinOp
 arithExprP :: Parser (Expr Integer)
